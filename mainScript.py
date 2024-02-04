@@ -1,11 +1,12 @@
 import random
-import numpy as np
 from graphics import GraphWin, Rectangle, Point, Text
+import copy
+import time
 
-def createRandomGrid():
+def createRandomGrid(size):
     grid = []
-    for _ in range(9):
-        grid.append([random.randint(1, 4) for _ in range(9)])
+    for _ in range(size):
+        grid.append([random.randint(1, 4) for _ in range(size)])
     return grid
 
 def getColor(number):
@@ -21,16 +22,9 @@ def getColor(number):
         case 4:
             return "gray"
 
-# colors = [1,2,3,4] #blue, purple, red, black
-
-
-# grid = createRandomGrid()
-# for row in grid:
-#     print(row)
-
-
 def display_array(matrix, win):
-    
+    rows = len(matrix)
+    cols = len(matrix[0])
 
     for i in range(rows):
         for j in range(cols):
@@ -63,11 +57,12 @@ def clickSquare(grid, clickedX, clickedY):
         x, y = coordinate
         grid[x][y] = 0
     
-    
+    applyGravity(grid)
+    return removeGaps(grid) #return empty col indexes used to determine if game is won
 
 
 
-def amIClickable(grid, x ,y):
+def isClickable(grid, x ,y):
     if (grid[x][y] != 0 and #if not 0 and all adjesents are not the clicked value
         ((0 <= x-1 < len(grid) and grid[x][y] == grid[x-1][y]) or
         (0 <= x+1 < len(grid) and grid[x][y] == grid[x+1][y]) or
@@ -76,6 +71,13 @@ def amIClickable(grid, x ,y):
         return True
     else:
         return False
+    
+def existsMoves(grid):
+    for row in range(len(grid)):
+        for col in range(len(gridNumbers[0])):
+            if isClickable(grid, row, col):
+                return True
+    return False
 
 def getAllTouchingSiblings(grid, x, y, adjacentSiblingCoords):
     adjacentSiblingCoords.add((x, y))
@@ -133,17 +135,6 @@ def removeGaps(array_of_arrays):
     
     return allEmptyColIndexes
 
-    # for col in range(cols-emptyCols):
-    #     if(array_of_arrays[rows-1][col] == 0):
-    #         moveColumnToEnd(array_of_arrays, col)
-    #         removeGaps(array_of_arrays)
-            # if col != 0:
-            #     swapColumns(array_of_arrays, col, cols-1)
-            #     removeGaps(array_of_arrays)
-            # else:
-            #     swapColumns(array_of_arrays, col, col+1)
-
-
 def checkGameWon(array_of_arrays):
     for row in array_of_arrays:
         if any(row):
@@ -155,61 +146,127 @@ def moveColumnToEnd(matrix, column_index):
     for row in matrix:
         row.append(row.pop(column_index))
 
+def isGameWon(grid):
+    return all(element == 0 for row in grid for element in row)
 
-if __name__ == "__main__":
-    # Example matrix (replace with your own)
-    # array_of_arrays = [
-    #     [1, 2, 3],
-    #     [4, 5, 6],
-    #     [7, 8, 9]
-    # ]
+def getPossibleMoves(grid):
+    posibleMoves = []
 
-    gridNumbers = createRandomGrid()
-    print(gridNumbers)
-    # gridNumbers = [
-    #     [4, 2, 2, 3, 3, 2, 4, 1, 4], 
-    #     [4, 3, 2, 1, 1, 2, 3, 1, 2], 
-    #     [4, 3, 1, 4, 1, 2, 1, 2, 4], 
-    #     [3, 1, 4, 3, 3, 1, 1, 1, 1], 
-    #     [1, 2, 2, 4, 3, 1, 2, 1, 1], 
-    #     [2, 2, 4, 2, 1, 4, 4, 3, 1], 
-    #     [4, 3, 3, 2, 2, 3, 2, 3, 1], 
-    #     [2, 4, 2, 4, 3, 2, 4, 2, 4], 
-    #     [2, 4, 3, 3, 3, 3, 1, 3, 1]]
-
-
-#     gridNumbers = [[3, 3, 1, 2, 1, 3, 2, 4, 1], [2, 4, 3, 4, 2, 2, 4, 3, 1], [3, 3, 4, 2, 3, 1, 3, 1, 2], [1, 2, 3, 4, 2, 3, 3, 1, 1], [1, 4, 3, 2, 1, 4, 3, 3, 1], [4, 4, 3, 4, 3, 3, 1, 3, 4], [4, 1, 3, 2, 4, 1, 2, 2, 1], [4, 2, 4, 1, 1, 
-# 3, 2, 4, 4], [2, 2, 2, 2, 4, 4, 2, 2, 4]] #double gap
+    for rowIndex in range(len(grid)):
+        for colIndex in range(len(grid[0])):
+            if isClickable(grid, rowIndex, colIndex):
+                siblings = set()
+                siblings = getAllTouchingSiblings(grid, rowIndex, colIndex, siblings)
+                if (siblings not in posibleMoves):
+                    posibleMoves.append(siblings)
     
+    return posibleMoves
 
-#     [[3, 2, 1, 4, 2, 4, 4, 3, 3], [3, 1, 2, 4, 3, 3, 2, 1, 3], [3, 2, 3, 3, 1, 4, 3, 2, 3], [3, 4, 1, 1, 3, 1, 1, 3, 3], [3, 2, 3, 1, 1, 2, 4, 4, 2], [1, 1, 4, 4, 2, 1, 1, 1, 4], [4, 2, 2, 3, 4, 1, 3, 3, 2], [2, 3, 4, 3, 3, 
-# 4, 3, 4, 2], [1, 1, 2, 4, 2, 3, 3, 2, 4]] #c letter case
-    # Display the array
+
+def getSolution(grid):
+    solutionArray = []
+
+    print("solving....")
+    if solveGame(grid, solutionArray):
+        print("SOLUTION!")
+        solutionArray.reverse()
+        print(solutionArray)
+    else:
+        print("no solution :(")
+
+    return solutionArray
+
+
+# solveIterations = 0
+def solveGame(grid, solutionSteps):
+    # global solveIterations
+    # solveIterations +=1
+    unchangedGrid = copy.deepcopy(grid)
+    posibilies =  getPossibleMoves(grid)
+
+    if len(posibilies ) > 0:
+        for posiblity in posibilies:
+            grid = copy.deepcopy(unchangedGrid)
+            moveRow, moveCol = next(iter(posiblity))
+
+            clickSquare(grid, moveRow, moveCol)
+            
+            if solveGame(grid, solutionSteps):
+                solutionSteps.append((moveRow+1, moveCol+1)) # making human readable
+                return True
+
+
+    elif isGameWon(grid):
+        return True
+    else:
+        return False
+
+def PlayGame():
+    #initial
+    gridNumbers = createRandomGrid(5)
     emptyColIndexes = []
-    
-    rows = len(gridNumbers)
-    cols = len(gridNumbers[0])
-    win_width = 50 * cols
-    win_height = 50 * rows
+    solutionSteps = []
+    print(gridNumbers)
+
+    #display stuff
+    win_height = 50 * len(gridNumbers)
+    win_width = 50 * len(gridNumbers[0])
     win = GraphWin("Dynamic Array Display", win_width, win_height)
-    # Get clicked element and print it in the console
+
+    #solver and timer
+
+    solutionSteps = getSolution(gridNumbers)
+
 
     while True:
         window = display_array(gridNumbers, win)
+
+        # click interaction
         clickedX, clickedY = get_clicked_element(window, gridNumbers)
-
-
-        if(amIClickable(gridNumbers, clickedX, clickedY)):
         # if True:
-            clickSquare(gridNumbers,clickedX,clickedY)
-            applyGravity(gridNumbers)
-            emptyColIndexes = removeGaps(gridNumbers)
+        if(isClickable(gridNumbers, clickedX, clickedY)):
+            emptyColIndexes = clickSquare(gridNumbers,clickedX,clickedY)
 
-        if len(emptyColIndexes) >= cols:
+        # solving using solution...
+        # for step in solutionSteps:
+        #     stepX, stepY = step
+        #     clickSquare(gridNumbers,stepX-1,stepY-1)
+        
+        #end state
+        if len(emptyColIndexes) >= len(gridNumbers[0]):
             break
-        # print(f"Clicked element: {clickedX, clickedY}")
 
     print("game won")
 
+def solverTesting():
 
-    # Close the window on click
+    #initial
+    
+    gridNumbers = createRandomGrid(5)
+    solutionSteps = []
+    
+    print(gridNumbers)
+
+    start_time = time.time()
+
+    solutionSteps = getSolution(gridNumbers)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print("solution took: ", round(elapsed_time, 2))
+    return [round(elapsed_time, 2)]
+
+if __name__ == "__main__":
+    # PlayGame()
+    solverTesting()
+
+import timeit
+
+# Use the setup parameter to include necessary imports and definitions
+setup_code = '''
+from my_module import combined_function
+'''
+
+# Measure the execution time of the combined_function
+execution_time = timeit.timeit(stmt="combined_function()", setup=setup_code, number=1000)
+
+print(f"Execution time: {execution_time} seconds")
