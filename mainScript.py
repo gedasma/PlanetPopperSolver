@@ -177,10 +177,7 @@ def getSolution(grid):
     return solutionArray
 
 
-# solveIterations = 0
 def solveGame(grid, solutionSteps):
-    # global solveIterations
-    # solveIterations +=1
     unchangedGrid = copy.deepcopy(grid)
     posibilies =  getPossibleMoves(grid)
 
@@ -194,7 +191,6 @@ def solveGame(grid, solutionSteps):
             if solveGame(grid, solutionSteps):
                 solutionSteps.append((moveRow+1, moveCol+1)) # making human readable
                 return True
-
 
     elif isGameWon(grid):
         return True
@@ -238,35 +234,50 @@ def PlayGame():
 
     print("game won")
 
-def solverTesting():
+def solverTesting(gridSize):
 
     #initial
     
-    gridNumbers = createRandomGrid(5)
-    solutionSteps = []
+    gridNumbers = createRandomGrid(gridSize)
     
     print(gridNumbers)
 
     start_time = time.time()
 
-    solutionSteps = getSolution(gridNumbers)
+    solution = getSolution(gridNumbers)
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print("solution took: ", round(elapsed_time, 2))
-    return [round(elapsed_time, 2)]
+    print("solution took: ", elapsed_time)
+    return elapsed_time, bool(solution)
+
+def printStats(statsArray, extraMessage):
+    minimum_value = min(statsArray, key=lambda x: x[0])
+    maximum_value = max(statsArray, key=lambda x: x[0])
+    average_value = sum(x[0] for x in statsArray) / len(statsArray) if len(statsArray) > 0 else 0  # Avoid division by zero if the array is empty
+
+    solvedCount = 0
+    for stat in statsArray:
+        if stat[1]:
+            solvedCount+=1
+    true_percentage = (solvedCount / len(statsArray)) * 100
+
+    # Print the results
+    print(extraMessage)
+    print(statsArray)
+
+    print(f"Minimum Value: {minimum_value}")
+    print(f"Maximum Value: {maximum_value}")
+    print(f"Average Value: {average_value}")
+    print(f"Solve Percent: {true_percentage}")
+
 
 if __name__ == "__main__":
     # PlayGame()
-    solverTesting()
+    solverStats = []
+    for i in range(20):
+        solveTime, solutionExists = solverTesting(6)
+        solverStats.append([solveTime,solutionExists])
+    printStats(solverStats, "")
+    
 
-import timeit
 
-# Use the setup parameter to include necessary imports and definitions
-setup_code = '''
-from my_module import combined_function
-'''
-
-# Measure the execution time of the combined_function
-execution_time = timeit.timeit(stmt="combined_function()", setup=setup_code, number=1000)
-
-print(f"Execution time: {execution_time} seconds")
