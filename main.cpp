@@ -6,6 +6,7 @@
 #include <ctime>
 #include <set>
 #include <algorithm>
+#include <chrono>
 
 using namespace std;
 
@@ -126,11 +127,7 @@ std::vector<int> removeGaps(std::vector<std::vector<int>>& array_of_arrays) {
     return allEmptyColIndexes;
 }
 
-
-std::vector<int> clickSquare(std::vector<std::vector<int>>& grid, int clickedX, int clickedY) {
-    std::set<std::pair<int, int>> adjacentSiblingCoords;
-
-    getAllTouchingSiblings(grid, clickedX, clickedY, adjacentSiblingCoords);
+std::vector<int> clickSquare(std::vector<std::vector<int>>& grid, std::set<std::pair<int, int>> adjacentSiblingCoords) {
 
     for (const auto& coordinate : adjacentSiblingCoords) {
         int x, y;
@@ -193,7 +190,7 @@ bool solveGame(std::vector<std::vector<int>>& grid, std::vector<std::pair<int, i
             int moveRow = possibility.begin()->first;
             int moveCol = possibility.begin()->second;
 
-            clickSquare(grid, moveRow, moveCol);
+            clickSquare(grid, possibility);
 
             if (solveGame(grid, solutionSteps)) {
                 solutionSteps.push_back(std::make_pair(moveRow + 1, moveCol + 1)); // Making it human-readable
@@ -208,7 +205,9 @@ bool solveGame(std::vector<std::vector<int>>& grid, std::vector<std::pair<int, i
 }
 
 std::vector<std::pair<int, int>> getSolution(std::vector<std::vector<int>>& grid) {
+
     std::vector<std::pair<int, int>> solutionArray;
+    std::vector<std::vector<std::vector<int>>> encounteredStates;
 
     std::cout << "Solving...\n";
     if (solveGame(grid, solutionArray)) {
@@ -218,7 +217,8 @@ std::vector<std::pair<int, int>> getSolution(std::vector<std::vector<int>>& grid
             std::cout << "(" << step.first << ", " << step.second << ") ";
         }
         std::cout << '\n';
-    } else {
+    } 
+    else {
         std::cout << "No solution :(\n";
     }
 
@@ -250,14 +250,34 @@ int main(){
         }
         std::cout << '\n';
     }
+    //timer start
+    auto start = std::chrono::high_resolution_clock::now();
 
-    std::vector<std::pair<int, int>> solution = getSolution(mapGrid);
+        std::vector<std::pair<int, int>> solution = getSolution(mapGrid);
 
-    std::cout << "Solution from main:\n";
-    for (const auto& step : solution) {
-        std::cout << "(" << step.first << ", " << step.second << ") ";
-    }
-    std::cout << '\n';
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "Solution took: " << duration.count() << " seconds" << std::endl;
+
+    // for (int i = 0; i < 10; ++i) {
+    // std::vector<std::vector<int>> testMap = mapGrid;
+
+    // //timer start
+    // auto start = std::chrono::high_resolution_clock::now();
+    // //solution calculation
+    // std::vector<std::pair<int, int>> testSolution = getSolution(testMap);
+    // //timer end
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> duration = end - start;
+    // std::cout << "Time taken: " << duration.count() << " seconds" << std::endl;
+    // }
+
+    // std::cout << "Solution from main:\n";
+    // for (const auto& step : solution) {
+    //     std::cout << "(" << step.first << ", " << step.second << ") ";
+    // }
+    std::cout << "Press anything to close...";
+    std::cin.ignore();
 
     return 0;
 }
