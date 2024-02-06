@@ -96,16 +96,12 @@ def getAllTouchingSiblings(grid, x, y, adjacentSiblingCoords):
     return adjacentSiblingCoords
 
 def applyGravity(array_of_arrays):
-    # Get the number of rows and columns
     rows = len(array_of_arrays)
     cols = len(array_of_arrays[0]) if rows > 0 else 0
 
-    # Iterate through each column
     for col in range(cols):
-        # Find the first non-zero element from the bottom
         for i in range(rows - 1, 0, -1):
             if array_of_arrays[i][col] == 0:
-                # Move the non-zero element down (if found)
                 for j in range(i - 1, -1, -1):
                     if array_of_arrays[j][col] != 0:
                         array_of_arrays[i][col], array_of_arrays[j][col] = array_of_arrays[j][col], array_of_arrays[i][col]
@@ -134,13 +130,6 @@ def removeGaps(array_of_arrays):
             moveColumnToEnd(array_of_arrays, col)
     
     return allEmptyColIndexes
-
-def checkGameWon(array_of_arrays):
-    for row in array_of_arrays:
-        if any(row):
-            return False
-    return True
-
 
 def moveColumnToEnd(matrix, column_index):
     for row in matrix:
@@ -199,7 +188,7 @@ def solveGame(grid, solutionSteps):
 
 def PlayGame():
     #initial
-    gridNumbers = createRandomGrid(5)
+    gridNumbers = createRandomGrid(7)
     emptyColIndexes = []
     solutionSteps = []
     print(gridNumbers)
@@ -274,7 +263,7 @@ def printStats(statsArray, extraMessage):
 if __name__ == "__main__":
     # PlayGame()
     solverStats = []
-    for i in range(20):
+    for i in range(1):
         solveTime, solutionExists = solverTesting(6)
         solverStats.append([solveTime,solutionExists])
     printStats(solverStats, "")
